@@ -3,6 +3,7 @@ from typing import Any, List
 from langchain_community.document_loaders import TextLoader, CSVLoader, PyPDFLoader
 
 
+
 def load_all_documents(data_dir: str) -> list[Any]:
   """load all supported from data directory and concert to Langchain document strcture"""
 
