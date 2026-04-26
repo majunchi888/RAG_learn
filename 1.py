@@ -4,8 +4,8 @@ import numpy as np
 from pathlib import Path
 from typing import List, Any
 from langchain_community.document_loaders import TextLoader, CSVLoader, PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
+from langchain_text_splitters import RecursiveCharacterTextSplitter # text splitter
+from sentence_transformers import SentenceTransformer # model enable 
 import faiss
 import pickle
 from dotenv import load_dotenv
@@ -22,11 +22,11 @@ def document_loaders(data_path: str ) -> List[Any]:
   documents = []  
 
 #PDF loader
-  pdf_paths = list(file_path.glob("**/*.pdf"))
+  pdf_paths = list(file_path.glob("**/*.pdf")) #不转list的话是个generator生成器
   
   for pdf_path in pdf_paths:
     try:
-     pdf_loader = PyPDFLoader(str(pdf_path))
+     pdf_loader = PyPDFLoader(str(pdf_path)) # pdf_path 是 pathlib.Path 对象
      loaded = pdf_loader.load()
      documents.extend(loaded)
      print(f"loaded {pdf_path}")
@@ -54,7 +54,7 @@ class EmbeddingPipeline:
     )
 
     chunks = splitter.split_documents(documents)
-    print(chunks)
+    # print(chunks)
     print(f"[Debug] Chunked {len(documents)} documents into {len(chunks)} chunks")
     return chunks
 
@@ -90,7 +90,7 @@ class FaissVectorStore:
   def add_embeddings(self, embeddings: np.array, metadata: List[Any] = None):
       dim = embeddings.shape[1]
       if self.index is None:
-        self.index = faiss.IndexFlatL2(dim)
+        self.index = faiss.IndexFlatL2(dim)  # L2 distance 创建空的索引 ，add , search, remove
       self.index.add(embeddings)  
       
       if metadata:
@@ -98,28 +98,28 @@ class FaissVectorStore:
       print(f"[Debug] Added {embeddings.shape[0]} embeddings to vector store")  
 
   def save(self):
-    faiss_path = os.path.join(self.persist_dir, "faiss_index")
+    faiss_path = os.path.join(self.persist_dir, "faiss_index")  # 字符串拼接成路径
     metadata_path = os.path.join(self.persist_dir, "matedata_pkl")
 
-    faiss.write_index(self.index, faiss_path)
+    faiss.write_index(self.index, faiss_path) # faiss的方法write_index 将 索引写入 
 
-    with open(metadata_path, "wb") as f:
-      pickle.dump(self.metadata, f)
+    with open(metadata_path, "wb") as f: # 以二进制写入 with 写完了自动关闭 ，f是文件对象
+      pickle.dump(self.metadata, f) # pickle.dump 将metadata 序列化并写入文件
     print(f"[Info] Saved Faiss index and metadata to: {self.persist_dir}") 
 
   def load(self):  
     faiss_path = os.path.join(self.persist_dir, "faiss_index")
     metadata_path = os.path.join(self.persist_dir, "matedata_pkl")
 
-    self.index = faiss.read_index(faiss_path)
+    self.index = faiss.read_index(faiss_path) # faiss的方法read_index 读取索引
     with open(metadata_path, "rb") as f:
-      self.metadata = pickle.load(f)
+      self.metadata = pickle.load(f) # pickle.load 反序列化
     print(f"[Info] Loaded Faiss index and metadata from: {self.persist_dir}")
 
   def search(self, query_embedding: np.ndarray, top_k: int = 3):
-    D,I = self.index.search(query_embedding, top_k)
+    D,I = self.index.search(query_embedding, top_k) # 返回距离和索引 
     results = []
-    for idx, distance in zip(I[0],D[0]):
+    for idx, distance in zip(I[0],D[0]): # 遍历索引和距离 
       meta = self.metadata[idx] if idx < len(self.metadata) else None
       results.append({"index": idx, "distance": distance, "metadata": meta})
       return results
@@ -136,7 +136,7 @@ class RAGSearch:
     meta_path = os.path.join(self.vectorstore.persist_dir, "metadata.pkl")
     if not (os.path.exists(faiss_path) and os.path.exists(meta_path)):
       docs = document_loaders("data")
-      self.vectorstore.build_documents(docs)
+      self.vectorstore.build_documents(docs) 
     else:  
       self.vectorstore.load()
     deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
@@ -145,7 +145,7 @@ class RAGSearch:
 
   def search_and_summarize(self, query: str, top_k: int = 3):
     results = self.vectorstore.query(query, top_k=top_k)
-    texts = [r["metadata"].get("text", "") for r in results if r["metadata"]]
+    texts = [r["metadata"].get("text", "") for r in results if r["metadata"]] # r["metadata"]是一个字典，get("text", "")是一个字符串
     context = "\n".join(texts)
     if not context:
       return "无法找到相关内容"
