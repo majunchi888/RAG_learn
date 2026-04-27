@@ -1,3 +1,9 @@
 {
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+
+  "python.formatting.provider": "black", // 指定格式化工具
+  "editor.formatOnSave": true, // 保存时自动格式化
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python" // 指定 Python 默认格式化器
+  }
 }

@@ -117,9 +117,9 @@ class FaissVectorStore:
     print(f"[Info] Loaded Faiss index and metadata from: {self.persist_dir}")
 
   def search(self, query_embedding: np.ndarray, top_k: int = 3):
-    D,I = self.index.search(query_embedding, top_k) # 返回距离和索引 
+    D,I = self.index.search(query_embedding, top_k) # 返回距离和索引 (二维数组)
     results = []
-    for idx, distance in zip(I[0],D[0]): # 遍历索引和距离 
+    for idx, distance in zip(I[0],D[0]): # 遍历索引和距离（二维数组的第一组） 
       meta = self.metadata[idx] if idx < len(self.metadata) else None
       results.append({"index": idx, "distance": distance, "metadata": meta})
       return results
